@@ -12,9 +12,12 @@ jobs:
     steps:
       - name: Check out this repo
         uses: actions/checkout@v2
-      - name: Fetch latest data
+      - name: Verify API
         run: |-
-          curl 'https://api.outbreak.info/genomics/lineage-by-sub-admin-most-recent?location_id=USA&pangolin_lineage=P.2&ndays=60' > incidents.json
+          echo 'API_SUCCESS='$(curl 'https://api.outbreak.info/genomics/lineage-by-sub-admin-most-recent?location_id=USA&pangolin_lineage=P.2&ndays=60' | jq '.success') >> $GITHUB_ENV
+      - name: Fetch latest data
+        run: |
+          [[ ${{ env.API_SUCCESS }} == "true" ]] && curl 'https://api.outbreak.info/genomics/lineage-by-sub-admin-most-recent?location_id=USA&pangolin_lineage=P.2&ndays=60' > incidents.json || echo "Failed response"
       - name: Commit and push if it changed
         run: |-
           git config user.name "Automated"
